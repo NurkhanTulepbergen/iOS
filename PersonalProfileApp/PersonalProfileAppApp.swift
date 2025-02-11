@@ -1,10 +1,3 @@
-//
-//  PersonalProfileAppApp.swift
-//  PersonalProfileApp
-//
-//  Created by Акнур Туганбай on 11.02.2025.
-//
-
 import SwiftUI
 
 @main
