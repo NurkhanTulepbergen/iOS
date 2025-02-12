@@ -31,13 +31,12 @@ struct ProfileView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(.systemBackground)) // Фикс белого экрана
+                .background(Color(.systemBackground)) 
             }
-            .navigationViewStyle(StackNavigationViewStyle()) // Для iPad
+            .navigationViewStyle(StackNavigationViewStyle()) 
         }
     }
     
-    // Фото профиля
     private func profileImage() -> some View {
         Image("photo")
             .resizable()
@@ -48,7 +47,6 @@ struct ProfileView: View {
             .shadow(radius: 20)
     }
     
-    // Информация о пользователе
     private func userInfo() -> some View {
         VStack(spacing: 10) {
             Text("Nurkhan Tulepbegren")
@@ -70,7 +68,6 @@ struct ProfileView: View {
         }
     }
     
-    // Кнопки навигации
     private func buttonSection() -> some View {
         VStack(spacing: 15) {
             NavigationLink(destination: HobbiesView()) {
@@ -91,7 +88,7 @@ struct ProfileView: View {
                     .cornerRadius(10)
             }
         }
-        .frame(maxWidth: 200) // Ограничиваем ширину кнопок в горизонтальном режиме
+        .frame(maxWidth: 200) 
     }
 }
 
