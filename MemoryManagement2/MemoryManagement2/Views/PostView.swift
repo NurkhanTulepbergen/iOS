@@ -1,108 +1,81 @@
 import SwiftUI
 
-// Пример модели Post
 struct PostView: View {
     let post: Post
-    @State private var loadedImage: UIImage? = nil  // Состояние для хранения загруженного изображения
-    @State private var errorMessage: String? = nil  // Состояние для хранения ошибки загрузки изображения
-    @State private var authorName: String = "Loading..."  // Имя автора поста
+    let profileManager: ProfileManager
     
-    // Инициализируем загрузчик изображения
-    @StateObject private var imageLoader = ImageLoader()
+    // State to track if the profile has loaded
+    @State private var authorUsername: String? = nil
     
     var body: some View {
-        VStack(spacing: 16) {
-            // Заголовок поста с автором
-            Text(authorName)
-                .font(.headline)
-            
-            // Изображение поста
-            if let image = loadedImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 200)
-                    .cornerRadius(10)
-            } else if let errorMessage = errorMessage {
-                // Если ошибка при загрузке изображения, показываем сообщение
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .padding()
+        HStack {
+            // Image (either from post or default icon)
+            if let imageURL = post.imageURL {
+                AsyncImage(url: imageURL) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 60, height: 60)
+                        .clipShape(Circle())
+                        .padding(.trailing, 10)
+                } placeholder: {
+                    ProgressView()
+                }
             } else {
-                // Плейсхолдер или индикатор загрузки
-                ProgressView("Loading Image...")
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .padding()
+                Image(systemName: "photo") // Default icon if no image URL
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(Circle())
+                    .padding(.trailing, 10)
             }
             
-            // Контент поста
-            Text(post.content)
-                .font(.body)
-                .lineLimit(nil)  // Позволяем отображать весь текст, не ограничивая количество строк
+            VStack(alignment: .leading, spacing: 5) {
+                // Display the author's username
+                if let username = authorUsername {
+                    Text(username)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                }
+                
+                // Like count
+                Text("\(post.likes) likes")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                
+                // Post content
+                Text(post.content)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .lineLimit(nil)
+            }
+            .padding(.vertical, 10)
             
-            // Количество лайков
-            Text("\(post.likes) Likes")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            Spacer()
+            Spacer() // Space between content and right side
         }
         .padding()
         .onAppear {
-            loadImage()
-            loadAuthorName()
+            // Fetch the profile of the post's author when the view appears
+            loadAuthorProfile()
         }
     }
     
-    // Метод для загрузки изображения
-    private func loadImage() {
-        if let url = post.imageURL { // Безопасно развертываем опциональный URL
-            imageLoader.loadImage(url: url)
-            imageLoader.completionHandler = { image in
-                // Убираем использование weak self, если это возможно
-                if let image = image {
-                    self.loadedImage = image // Обновляем UI с загруженным изображением
-                } else {
-                    self.errorMessage = "Failed to load image." // Если загрузка не удалась
+    // Function to load the author's profile based on post's authorId
+    private func loadAuthorProfile() {
+        guard let profile = profileManager.getProfile(for: post.authorId) else {
+            // Profile not found, load it
+            profileManager.loadProfile(id: post.authorId, username: "loading...", bio: "loading bio", followers: 0) { result in
+                switch result {
+                case .success(let userProfile):
+                    self.authorUsername = userProfile.username
+                case .failure(let error):
+                    print("Failed to load profile: \(error)")
                 }
             }
-        } else {
-            self.errorMessage = "No image URL available." // Если URL отсутствует
+            return
         }
-    }
-
-
-    
-    // Метод для загрузки имени автора
-    private func loadAuthorName() {
-        // Замените этот метод на реальную логику, чтобы получить имя автора по его ID.
-        // Например, запросить API или загрузить из базы данных.
-        // Для демонстрации возьмем просто строку:
         
-        // Пример:
-        self.authorName = "User \(post.authorId.uuidString)"
-    }
-}
-
-// Делегат для обработки ошибок при загрузке изображения
-class ImageLoaderDelegateWrapper: ImageLoaderDelegate {
-    private let failureHandler: (ImageLoader, Error) -> Void
-    
-    init(failureHandler: @escaping (ImageLoader, Error) -> Void) {
-        self.failureHandler = failureHandler
-    }
-    
-    func imageLoader(_ loader: ImageLoader, didLoad image: UIImage) {
-        // Не используется в данном примере
-    }
-    
-    func imageLoader(_ loader: ImageLoader, didFailWith error: Error) {
-        failureHandler(loader, error)
-    }
-}
-
-struct PostView_Previews: PreviewProvider {
-    static var previews: some View {
-        PostView(post: Post(id: UUID(), authorId: UUID(), content: "This is a post content.", likes: 120))
+        // If profile already loaded, use it
+        self.authorUsername = profile.username
     }
 }

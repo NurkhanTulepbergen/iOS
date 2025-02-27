@@ -16,20 +16,33 @@ class ImageLoader: ObservableObject {
     
     func loadImage(url: URL) {
         DispatchQueue.global().async {
-            // Симуляция загрузки изображения (замените на реальный запрос, если нужно)
-            let image = UIImage(systemName: "photo") ?? UIImage() // Плейсхолдер изображения
-            
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+            // Загружаем изображение асинхронно
+            do {
+                let data = try Data(contentsOf: url) // Получаем данные изображения
+                guard let loadedImage = UIImage(data: data) else {
+                    throw NSError(domain: "ImageLoaderError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Не удалось создать изображение из данных."])
+                }
                 
-                // Обновляем свойство image
-                self.image = image
-                
-                // Если есть делегат, уведомляем о завершении загрузки
-                self.delegate?.imageLoader(self, didLoad: image)
-                
-                // Если есть замыкание, вызываем его с загруженным изображением
-                self.completionHandler?(image)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    
+                    // Обновляем свойство image
+                    self.image = loadedImage
+                    
+                    // Если есть делегат, уведомляем о завершении загрузки
+                    self.delegate?.imageLoader(self, didLoad: loadedImage)
+                    
+                    // Если есть замыкание, вызываем его с загруженным изображением
+                    self.completionHandler?(loadedImage)
+                }
+            } catch {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    
+                    // Обработать ошибку загрузки
+                    self.delegate?.imageLoader(self, didFailWith: error)
+                    self.completionHandler?(nil) // Передаем nil, если изображение не загрузилось
+                }
             }
         }
     }

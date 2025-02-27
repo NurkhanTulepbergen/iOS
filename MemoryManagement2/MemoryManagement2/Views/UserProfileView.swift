@@ -12,7 +12,7 @@ struct UserProfileView: View {
     
     // Загрузка профиля с параметрами
     func loadProfile() {
-        profileManager.loadProfile(id: "1", username: "Nurkhan", bio: "Here need to be something, but I am too lazy for create it", followers: 150) { result in
+        profileManager.loadProfile(id: UUID(), username: "Nurkhan", bio: "Here need to be something, but I am too lazy for create it", followers: 150) { result in
             switch result {
             case .success(let profile):
                 self.profile = profile  // Теперь можно изменять профиль

@@ -17,4 +17,12 @@ struct Post: Hashable, Equatable {
     static func == (lhs: Post, rhs: Post) -> Bool {
         return lhs.id == rhs.id && lhs.authorId == rhs.authorId
     }
+    
+    func getAuthorUsername(from manager: ProfileManager) -> String? {
+        guard let profile = manager.getProfile(for: authorId) else {
+            return nil // Если профиля нет, возвращаем nil
+        }
+        return profile.username
+    }
 }
+    
