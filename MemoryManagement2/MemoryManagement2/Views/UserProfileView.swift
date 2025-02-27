@@ -1,21 +1,17 @@
 import SwiftUI
 
 struct UserProfileView: View {
-    // Используем @State для изменения профиля в View
-    @State private var profile: UserProfile?  // Профиль теперь можно изменять
+    @State private var profile: UserProfile?
     
-    // Храним ссылку на ProfileManager
     @StateObject private var profileManager = ProfileManager(delegate: nil)
     
-    // Текст ошибки, если загрузка профиля не удалась
     @State private var errorMessage: String?
     
-    // Загрузка профиля с параметрами
     func loadProfile() {
         profileManager.loadProfile(id: UUID(), username: "Nurkhan", bio: "Here need to be something, but I am too lazy for create it", followers: 150) { result in
             switch result {
             case .success(let profile):
-                self.profile = profile  // Теперь можно изменять профиль
+                self.profile = profile
             case .failure(let error):
                 self.errorMessage = "Error loading profile: \(error.localizedDescription)"
             }
@@ -25,7 +21,6 @@ struct UserProfileView: View {
     var body: some View {
         VStack {
             if let profile = profile {
-                // Если профиль загружен, отображаем данные
                 Text("Username: \(profile.username)")
                     .font(.title)
                     .padding()
@@ -36,7 +31,6 @@ struct UserProfileView: View {
                 Text("Followers: \(profile.followers)")
                     .padding()
             } else {
-                // Если профиль еще не загружен, показываем кнопку для загрузки
                 Text("No Profile Available")
                     .padding()
                 
@@ -51,7 +45,6 @@ struct UserProfileView: View {
                 .padding()
             }
             
-            // Показываем ошибку, если она возникла
             if let errorMessage = errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
@@ -59,7 +52,6 @@ struct UserProfileView: View {
             }
         }
         .onAppear {
-            // Загрузим профиль при появлении представления
             loadProfile()
         }
     }
@@ -67,6 +59,6 @@ struct UserProfileView: View {
 
 struct UserProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        UserProfileView()  // Теперь можно просто создать экземпляр без параметров
+        UserProfileView() 
     }
 }
