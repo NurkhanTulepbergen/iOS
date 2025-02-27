@@ -4,78 +4,81 @@ struct PostView: View {
     let post: Post
     let profileManager: ProfileManager
     
-    // State to track if the profile has loaded
+    // Используем ImageLoader для загрузки изображения
+    @StateObject private var imageLoader = ImageLoader()
     @State private var authorUsername: String? = nil
     
     var body: some View {
         HStack {
-            // Image (either from post or default icon)
-            if let imageURL = post.imageURL {
-                AsyncImage(url: imageURL) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
-                        .padding(.trailing, 10)
-                } placeholder: {
-                    ProgressView()
-                }
-            } else {
-                Image(systemName: "photo") // Default icon if no image URL
+            // Загружаем изображение через ImageLoader
+            if let image = imageLoader.image {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: 60, height: 60)
-                    .clipShape(Circle())
+                    .clipShape(Rectangle()) // Делаем квадрат
+                    .padding(.trailing, 10)
+            } else {
+                Image(systemName: "photo") // Заглушка, если нет изображения
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(Rectangle())
                     .padding(.trailing, 10)
             }
             
             VStack(alignment: .leading, spacing: 5) {
-                // Display the author's username
+                // Имя автора
                 if let username = authorUsername {
                     Text(username)
                         .font(.headline)
                         .foregroundColor(.primary)
+                } else {
+                    Text("Loading...") // Пока загружается имя
+                        .font(.headline)
+                        .foregroundColor(.gray)
                 }
-                
-                // Like count
+
+                // Лайки
                 Text("\(post.likes) likes")
                     .font(.subheadline)
                     .foregroundColor(.gray)
-                
-                // Post content
+
+                // Текст поста
                 Text(post.content)
                     .font(.body)
                     .foregroundColor(.primary)
                     .lineLimit(nil)
             }
             .padding(.vertical, 10)
-            
-            Spacer() // Space between content and right side
+
+            Spacer()
         }
         .padding()
         .onAppear {
-            // Fetch the profile of the post's author when the view appears
+            // Загружаем изображение
+            if let imageURL = post.imageURL {
+                imageLoader.loadImage(url: imageURL)
+            }
+            
+            // Загружаем профиль автора
             loadAuthorProfile()
         }
     }
     
-    // Function to load the author's profile based on post's authorId
+    // Функция загрузки профиля автора
     private func loadAuthorProfile() {
         guard let profile = profileManager.getProfile(for: post.authorId) else {
-            // Profile not found, load it
             profileManager.loadProfile(id: post.authorId, username: "loading...", bio: "loading bio", followers: 0) { result in
                 switch result {
                 case .success(let userProfile):
                     self.authorUsername = userProfile.username
                 case .failure(let error):
-                    print("Failed to load profile: \(error)")
+                    print("Ошибка загрузки профиля: \(error)")
                 }
             }
             return
         }
-        
-        // If profile already loaded, use it
         self.authorUsername = profile.username
     }
 }

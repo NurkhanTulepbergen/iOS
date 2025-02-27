@@ -8,6 +8,6 @@ struct FeedView: View {
         List(posts, id: \.id) { post in
             PostView(post: post, profileManager: profileManager)
         }
-        .navigationTitle("Лента")
+        .navigationTitle("Feed")
     }
 }
